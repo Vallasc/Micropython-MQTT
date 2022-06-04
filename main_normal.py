@@ -50,7 +50,3 @@ def run():
             time.sleep(PUB_TIME_SEC)
     except OSError as e:
         restart()
-
-
-print("Executing main1.py")
-run()
