@@ -1,2 +1,3 @@
+import main_normal
 
-import main2
+main_normal.run()
