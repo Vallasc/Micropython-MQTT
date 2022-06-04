@@ -3,12 +3,12 @@ from machine import *
 
 freq(240000000)
 
-# Unptimized code
+# Unoptimized code
 p0 = Pin(13, Pin.OUT)
 m0 = time.ticks_ms()
 for i in range(1000000):
     p0.on()
-    p0.off()  
+    p0.off()
 print(time.ticks_ms() - m0)
 
 # Optimized code
