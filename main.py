@@ -1,3 +1,5 @@
-import main_normal
+# import main_normal
+# main_normal.run()
 
-main_normal.run()
+import main_low_power
+main_low_power.run()
