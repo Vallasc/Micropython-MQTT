@@ -9,9 +9,9 @@ PUB_TIME_SEC = 5
 TOPIC = "channels/" + CHANNEL_ID + "/publish"
 
 def restart():
-  print('Failed to connect to MQTT broker. Reconnecting...')
-  time.sleep(5)
-  machine.reset()
+    print('Failed to connect to MQTT broker. Reconnecting...')
+    time.sleep(5)
+    machine.reset()
 
 @micropython.native
 def run():
@@ -32,7 +32,7 @@ def run():
 
         # Read DHT sensor
         # Fix error that sometimes after a reset doesn't measure
-        for x in range(3):
+        for _ in range(3):
             try: d.measure(); break
             except: pass
 
