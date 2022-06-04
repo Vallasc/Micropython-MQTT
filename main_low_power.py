@@ -1,9 +1,8 @@
-import dht
 from credentials import USERNAME, PASSWORD, CHANNEL_ID
-import utils
 from umqtt import simple
 import machine
 import time
+import dht
 
 SERVER = "mqtt3.thingspeak.com"
 PUB_TIME_SEC = 5
@@ -54,5 +53,3 @@ def run():
     print("Going into deep-sleep")
     # Put the device to sleep for PUB_TIME_SEC seconds
     machine.deepsleep(PUB_TIME_SEC*1000)
-
-run()
