@@ -6,47 +6,43 @@ import machine
 import time
 
 SERVER = "mqtt3.thingspeak.com"
-PUB_TIME_SEC = 3
+PUB_TIME_SEC = 5
 TOPIC = "channels/" + CHANNEL_ID + "/publish"
 
+# Error handling
 def restart():
-  print('Failed to connect to MQTT broker. Reconnecting...')
+  print('Failed to send data to MQTT broker. Reconnecting...')
   time.sleep(5)
-  run()
+  machine.reset()
 
 @micropython.native
 def run():
     print("Executing main_normal.py")
-    client = simple.MQTTClient(USERNAME, SERVER, user=USERNAME, password=PASSWORD)
-    try:
-        client.connect()
-    except OSError as e:
-        restart()
 
-    d = dht.DHT11(machine.Pin(32))
+    # Lower the clock to save power
     machine.freq(80000000)
 
+    # MQTT client connection
+    client = simple.MQTTClient(USERNAME, SERVER, user=USERNAME, password=PASSWORD)
+
+    # Setup DHT sensor
+    d = dht.DHT11(machine.Pin(19))
+
     try:
+        client.connect()
         while True:
-            startMillis = time.ticks_ms()
+            # Read DHT sensor
+            d.measure()
 
-            temp_mean = 0
-            hum_mean = 0
-            for i in range(10):
-                utils.measure(d)
-                temp_mean += d.temperature()
-                hum_mean += d.humidity()
-            
-            temp_mean = str(temp_mean/10)
-            hum_mean = str(hum_mean/10)
+            payload = "field1=" + str(d.temperature()) + "&field2=" + str(d.humidity())
+            print("\nTemperature: " + str(d.temperature()))
+            print("Humidity: " + str(d.humidity()))
 
-            payload = "field1=" + temp_mean + "&field2=" + hum_mean
-            print("\nTemperature: " + temp_mean)
-            print("Humidity: " + hum_mean)
-
+            # Publish data to broker
             client.publish(TOPIC, payload)
             print("Publish completed")
-            print("time: " + str(time.ticks_ms() - startMillis))
+
             time.sleep(PUB_TIME_SEC)
-    except OSError as e:
+    except Exception as e:
+        print(e)
         restart()

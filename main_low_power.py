@@ -6,7 +6,7 @@ import machine
 import time
 
 SERVER = "mqtt3.thingspeak.com"
-PUB_TIME_SEC = 3
+PUB_TIME_SEC = 5
 TOPIC = "channels/" + CHANNEL_ID + "/publish"
 
 def restart():
@@ -17,30 +17,42 @@ def restart():
 @micropython.native
 def run():
     print("Executing main_low_power.py")
-    client = simple.MQTTClient(USERNAME, SERVER, user=USERNAME, password=PASSWORD)
-    d = dht.DHT11(machine.Pin(32,machine.Pin.IN, machine.Pin.PULL_UP))
-    try:
-        client.connect()
-        startMillis = time.ticks_ms()
-        
-        temp_mean = 0
-        hum_mean = 0
-        for i in range(10):
-            utils.measure(d)
-            temp_mean += d.temperature()
-            hum_mean += d.humidity()
-        temp_mean = str(temp_mean/10)
-        hum_mean = str(hum_mean/10)
 
-        payload = "field1=" + temp_mean + "&field2=" + hum_mean
-        print("\nTemperature: " + temp_mean)
-        print("Humidity: " + hum_mean)
+    # Lower the clock to save power
+    machine.freq(80000000)
+
+    # MQTT client connection
+    client = simple.MQTTClient(USERNAME, SERVER, user=USERNAME, password=PASSWORD)
+
+    # Setup DHT sensor
+    d = dht.DHT11(machine.Pin(19))
+
+    try:
+        # MQTT client connection
+        client.connect()
+
+        # Read DHT sensor
+        # Fix error that sometimes after a reset doesn't measure
+        for x in range(3):
+            try: d.measure(); break
+            except: pass
+
+        payload = "field1=" + str(d.temperature()) + "&field2=" + str(d.humidity())
+        print("\nTemperature: " + str(d.temperature()))
+        print("Humidity: " + str(d.humidity()))
+
+        # Publish data to broker
         client.publish(TOPIC, payload)
+        print("Publish completed")
         client.disconnect()
-    except Exception:
+        print("Client disconnected")
+
+    except Exception as e:
+        print(e)
         restart()
 
-    print("Publish completed")
     print("Going into deep-sleep")
-    # put the device to sleep for PUB_TIME_SEC seconds
+    # Put the device to sleep for PUB_TIME_SEC seconds
     machine.deepsleep(PUB_TIME_SEC*1000)
+
+run()
